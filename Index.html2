@@ -1,0 +1,192 @@
+
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080d19">
+<title>Dev Universal Remote</title>
+<style>
+:root{color-scheme:dark;--bg:#080d19;--panel:#121c30;--line:#2a3852;--muted:#a6b4ca;--blue:#4386ff;--green:#42d6a4}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#f5f7ff;font:15px/1.5 system-ui,Arial,sans-serif}
+header{padding:24px 18px;background:linear-gradient(140deg,#1c3b6c,#0b1221);border-bottom:1px solid var(--line)}
+header h1{margin:0;font-size:24px}
+header p{margin:6px 0 0;color:var(--muted);font-size:13px}
+main{max-width:650px;margin:auto;padding:14px}
+nav{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:14px}
+button,select{font:inherit}
+button{background:#1b2941;color:white;border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.tab{font-size:13px;padding:12px 2px}
+.tab.active{background:#204579;border-color:var(--blue)}
+.panel{padding:17px;background:var(--panel);border:1px solid var(--line);border-radius:17px;margin-bottom:13px}
+h2{font-size:20px;margin:0 0 7px}
+h3{font-size:15px;margin:18px 0 7px}
+.muted{color:var(--muted);font-size:13px;line-height:1.65}
+label{display:block;color:var(--muted);font-size:13px;margin:12px 0 6px}
+select{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;background:#0b1425;color:white}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.big{min-height:94px;font-weight:650}
+.big span{display:block;font-size:26px;margin-bottom:5px}
+.full{width:100%;margin-top:9px}
+.primary{background:var(--blue);border-color:var(--blue)}
+.status{display:flex;align-items:flex-start;gap:9px;padding:12px;border-radius:10px;background:#0b1425;margin:13px 0;font-size:13px;overflow-wrap:anywhere}
+.dot{width:9px;height:9px;flex:0 0 9px;background:#8996aa;border-radius:50%;margin-top:5px}
+.note{padding:12px;border-radius:10px;background:#0b1425;color:var(--muted);font-size:13px;line-height:1.65;overflow-wrap:anywhere;white-space:pre-wrap}
+.hidden{display:none!important}
+footer{text-align:center;padding:15px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+<h1>⚡ Dev Universal Remote</h1>
+<p>IR Remote · Bluetooth BLE · Car Controller</p>
+</header>
+<main>
+<nav>
+<button class="tab active" data-page="ir">📺 IR Remote</button>
+<button class="tab" data-page="bt">🔵 Bluetooth</button>
+<button class="tab" data-page="car">🚘 Car Control</button>
+</nav>
+
+<section id="ir" class="page">
+<div class="panel">
+<h2>📺 Universal IR Remote</h2>
+<p class="muted">TV, AC आणि इतर IR उपकरणांसाठी इंटरफेस.</p>
+<label for="device">उपकरण निवडा</label>
+<select id="device">
+<option>TV</option><option>AC</option><option>Set-top box</option><option>इतर IR उपकरण</option>
+</select>
+<div class="grid">
+<button class="big" data-ir="Power"><span>⏻</span>Power</button>
+<button class="big" data-ir="Mute"><span>🔇</span>Mute</button>
+<button class="big" data-ir="Volume Up"><span>＋</span>Volume Up</button>
+<button class="big" data-ir="Volume Down"><span>－</span>Volume Down</button>
+<button class="big" data-ir="Channel Up"><span>⌃</span>Channel Up</button>
+<button class="big" data-ir="Channel Down"><span>⌄</span>Channel Down</button>
+</div>
+<div id="irStatus" class="status"><span class="dot"></span><span>IR हार्डवेअर जोडलेले नाही.</span></div>
+<div class="note">ही बटणे सध्या प्रत्यक्ष IR सिग्नल पाठवत नाहीत. फोनच्या IR Blaster साठी समर्थित native Android integration किंवा बाह्य transmitter आवश्यक आहे.</div>
+</div>
+</section>
+
+<section id="bt" class="page hidden">
+<div class="panel">
+<h2>🔵 Bluetooth BLE</h2>
+<p class="muted">सुसंगत Bluetooth Low Energy डिव्हाइसशी जोडणी करा.</p>
+<div id="btStatus" class="status"><span class="dot"></span><span>Bluetooth तपासलेले नाही.</span></div>
+<button id="checkBt" class="full">Bluetooth उपलब्धता तपासा</button>
+<button id="connectBt" class="primary full">डिव्हाइस निवडा व कनेक्ट करा</button>
+<button id="inspectBt" class="full" disabled>GATT सेवा पहा</button>
+<button id="disconnectBt" class="full" disabled>Disconnect</button>
+<h3>डिव्हाइस माहिती</h3>
+<div id="deviceInfo" class="note">डिव्हाइस निवडलेले नाही.</div>
+<h3>GATT सेवा</h3>
+<div id="services" class="note">अजून सेवा तपासलेल्या नाहीत.</div>
+</div>
+</section>
+
+<section id="car" class="page hidden">
+<div class="panel">
+<h2>🚘 Car Controller</h2>
+<p class="muted">प्रत्यक्ष कार नियंत्रणासाठी सुसंगत आणि अधिकृत हार्डवेअर आवश्यक आहे.</p>
+<div id="carStatus" class="status"><span class="dot"></span><span>कार कंट्रोलर कॉन्फिगर केलेला नाही.</span></div>
+<div class="grid">
+<button class="big" disabled><span>🔒</span>Lock</button>
+<button class="big" disabled><span>🔓</span>Unlock</button>
+</div>
+<div class="note">Lock/Unlock निष्क्रिय आहेत. Bluetooth जोडले म्हणजे कार नियंत्रित करता येते असे नाही. कारच्या मॉडेलला सुसंगत कंट्रोलर, अधिकृत प्रोटोकॉल आणि सुरक्षित प्रमाणीकरण आवश्यक आहे. हार्डवेअर पडताळणी होईपर्यंत आदेश पाठवले जाणार नाहीत.</div>
+<h3>Internet Controller</h3>
+<div class="note">दूरस्थ नियंत्रणासाठी सुरक्षित backend, मालकाची पडताळणी आणि अधिकृत vehicle API किंवा इंटरनेट-सक्षम हार्डवेअर आवश्यक आहे. हा App स्वतः कारशी इंटरनेट कनेक्शन तयार करत नाही.</div>
+</div>
+</section>
+
+<section class="panel">
+<h2>📋 Activity Log</h2>
+<div id="log" class="note">App सुरू झाला.</div>
+<button id="clearLog" class="full">Log साफ करा</button>
+</section>
+</main>
+<footer>Dev Universal Remote · GitHub Pages</footer>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let device=null,server=null;
+
+function log(message){
+const line=new Date().toLocaleTimeString()+" — "+message;
+$("log").textContent=line+"\n"+$("log").textContent;
+}
+function status(id,message,color="#8996aa"){
+const el=$(id);el.replaceChildren();
+const dot=document.createElement("span");dot.className="dot";dot.style.background=color;
+const text=document.createElement("span");text.textContent=message;
+el.append(dot,text);
+}
+document.querySelectorAll(".tab").forEach(btn=>{
+btn.addEventListener("click",()=>{
+document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b===btn));
+document.querySelectorAll(".page").forEach(p=>p.classList.toggle("hidden",p.id!==btn.dataset.page));
+});
+});
+document.querySelectorAll("[data-ir]").forEach(btn=>{
+btn.addEventListener("click",()=>{
+const message=$("device").value+" "+btn.dataset.ir+": प्रत्यक्ष IR सिग्नल पाठवलेला नाही.";
+status("irStatus",message,"#ffc568");log(message);
+});
+});
+$("checkBt").addEventListener("click",async()=>{
+if(!window.isSecureContext){
+status("btStatus","HTTPS आवश्यक आहे. GitHub Pages HTTPS लिंक वापरा.","#ff647c");return;
+}
+if(!navigator.bluetooth){
+status("btStatus","या ब्राउझरमध्ये Web Bluetooth उपलब्ध नाही.","#ff647c");
+log("Web Bluetooth unsupported");return;
+}
+try{
+const available=await navigator.bluetooth.getAvailability();
+status("btStatus",available?"Bluetooth उपलब्ध आहे.":"Bluetooth उपलब्ध नाही.",available?"#42d6a4":"#ff647c");
+log("Bluetooth availability: "+available);
+}catch(e){status("btStatus","तपासणी अयशस्वी: "+e.message,"#ff647c");}
+});
+$("connectBt").addEventListener("click",async()=>{
+if(!window.isSecureContext||!navigator.bluetooth){
+status("btStatus","HTTPS आणि Web Bluetooth समर्थित ब्राउझर आवश्यक आहे.","#ff647c");return;
+}
+try{
+device=await navigator.bluetooth.requestDevice({acceptAllDevices:true});
+$("deviceInfo").textContent="नाव: "+(device.name||"नाव उपलब्ध नाही")+"\nID: "+device.id;
+device.addEventListener("gattserverdisconnected",()=>{
+server=null;$("disconnectBt").disabled=true;$("inspectBt").disabled=true;
+status("btStatus","डिव्हाइस डिस्कनेक्ट झाले.","#ff647c");log("BLE disconnected");
+});
+if(!device.gatt)throw new Error("या डिव्हाइसवर GATT उपलब्ध नाही.");
+server=await device.gatt.connect();
+$("disconnectBt").disabled=false;$("inspectBt").disabled=false;
+status("btStatus","BLE डिव्हाइस जोडले गेले.","#42d6a4");
+log("BLE connected: "+(device.name||device.id));
+}catch(e){
+status("btStatus","जोडणी अयशस्वी: "+e.message,"#ff647c");log("BLE: "+e.message);
+}
+});
+$("disconnectBt").addEventListener("click",()=>{
+if(device&&device.gatt&&device.gatt.connected)device.gatt.disconnect();
+});
+$("inspectBt").addEventListener("click",async()=>{
+if(!server||!server.connected){status("btStatus","प्रथम डिव्हाइस कनेक्ट करा.","#ffc568");return;}
+try{
+const list=await server.getPrimaryServices();
+$("services").textContent=list.length?list.map(s=>s.uuid).join("\n"):"GATT सेवा उपलब्ध नाहीत.";
+log("GATT services read: "+list.length);
+}catch(e){
+$("services").textContent="सेवा वाचता आल्या नाहीत. डिव्हाइसने प्रवेश नाकारला असू शकतो.";
+log("GATT error: "+e.message);
+}
+});
+$("clearLog").addEventListener("click",()=>$("log").textContent="Log साफ केला.");
+</script>
+</body>
+</html>
